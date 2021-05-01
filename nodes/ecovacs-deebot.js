@@ -41,6 +41,7 @@ module.exports = function (RED) {
                         node.vacbot.run('GetWaterBoxInfo','');
                         node.vacbot.run('GetWaterLevel','');
                     }
+                    node.vacbot.run("GetMaps");
 
                     node.vacbot.on('disconnect', () => {
                         node.status({
@@ -152,6 +153,41 @@ module.exports = function (RED) {
                     node.vacbot.on('AutoEmpty', (value) => {
                         const msg = createMsgObject('AutoEmpty', value);
                         node.send(msg);
+                    });
+                    node.vacbot.on('Maps', (object) => {
+                        const msg = createMsgObject('Maps', object);
+                        for (const i in object['maps']) {
+                            const mapID = object['maps'][i]['mapID'];
+                            node.vacbot.run('GetSpotAreas', mapID);
+                            node.vacbot.run('GetVirtualBoundaries', mapID);
+                        }
+                    });
+                    node.vacbot.on('MapSpotAreas', (object) => {
+                        const msg = createMsgObject('MapSpotAreas', object);
+                        for (const i in object['mapSpotAreas']) {
+                            const spotAreaID = object['mapSpotAreas'][i]['mapSpotAreaID'];
+                            node.vacbot.run('GetSpotAreaInfo', object['mapID'], spotAreaID);
+                        }
+                    });
+                    node.vacbot.on('MapSpotAreaInfo', (object) => {
+                        const msg = createMsgObject('MapSpotAreaInfo', object);
+                    });
+                    node.vacbot.on('MapVirtualBoundaries', (object) => {
+                        const msg = createMsgObject('MapVirtualBoundaries', object);
+                        const mapID = object['mapID'];
+                        const virtualBoundariesCombined = [...object['mapVirtualWalls'], ...object['mapNoMopZones']];
+                        const virtualBoundaryArray = [];
+                        for (const i in virtualBoundariesCombined) {
+                            virtualBoundaryArray[virtualBoundariesCombined[i]['mapVirtualBoundaryID']] = virtualBoundariesCombined[i];
+                        }
+                        for (const i in virtualBoundaryArray) {
+                            const mapVirtualBoundaryID = virtualBoundaryArray[i]['mapVirtualBoundaryID'];
+                            const mapVirtualBoundaryType = virtualBoundaryArray[i]['mapVirtualBoundaryType'];
+                            node.vacbot.run('GetVirtualBoundaryInfo', mapID, mapVirtualBoundaryID, mapVirtualBoundaryType);
+                        }
+                    });
+                    node.vacbot.on('MapVirtualBoundaryInfo', (object) => {
+                        const msg = createMsgObject('MapVirtualBoundaryInfo', object);
                     });
                 });
                 node.vacbot.connect_and_wait_until_ready();
