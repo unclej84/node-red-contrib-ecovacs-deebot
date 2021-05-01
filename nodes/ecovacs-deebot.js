@@ -41,7 +41,7 @@ module.exports = function (RED) {
                         node.vacbot.run('GetWaterBoxInfo','');
                         node.vacbot.run('GetWaterLevel','');
                     }
-                    node.vacbot.run("GetMaps");
+                    node.vacbot.run('GetMaps');
 
                     node.vacbot.on('disconnect', () => {
                         node.status({
@@ -156,6 +156,7 @@ module.exports = function (RED) {
                     });
                     node.vacbot.on('Maps', (object) => {
                         const msg = createMsgObject('Maps', object);
+                        node.send(msg);
                         for (const i in object['maps']) {
                             const mapID = object['maps'][i]['mapID'];
                             node.vacbot.run('GetSpotAreas', mapID);
@@ -164,6 +165,7 @@ module.exports = function (RED) {
                     });
                     node.vacbot.on('MapSpotAreas', (object) => {
                         const msg = createMsgObject('MapSpotAreas', object);
+                        node.send(msg);
                         for (const i in object['mapSpotAreas']) {
                             const spotAreaID = object['mapSpotAreas'][i]['mapSpotAreaID'];
                             node.vacbot.run('GetSpotAreaInfo', object['mapID'], spotAreaID);
@@ -171,9 +173,11 @@ module.exports = function (RED) {
                     });
                     node.vacbot.on('MapSpotAreaInfo', (object) => {
                         const msg = createMsgObject('MapSpotAreaInfo', object);
+                        node.send(msg);
                     });
                     node.vacbot.on('MapVirtualBoundaries', (object) => {
                         const msg = createMsgObject('MapVirtualBoundaries', object);
+                        node.send(msg);
                         const mapID = object['mapID'];
                         const virtualBoundariesCombined = [...object['mapVirtualWalls'], ...object['mapNoMopZones']];
                         const virtualBoundaryArray = [];
@@ -188,6 +192,7 @@ module.exports = function (RED) {
                     });
                     node.vacbot.on('MapVirtualBoundaryInfo', (object) => {
                         const msg = createMsgObject('MapVirtualBoundaryInfo', object);
+                        node.send(msg);
                     });
                 });
                 node.vacbot.connect_and_wait_until_ready();
